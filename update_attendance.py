@@ -1,52 +1,35 @@
 import json
-import openpyxl
-from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
+import pandas as pd
+from datetime import datetime
 
-# Load users and attendance data
-with open('users.json', 'r') as users_file:
-    users_data = json.load(users_file)
 
-with open('attendance.json', 'r') as attendance_file:
-    attendance_data = json.load(attendance_file)
+def update_attendance(Users_file, Recognized_faces):
+    # Load registered faces from Users.json
+    with open(Users_file, 'r') as f:
+        registered_faces = json.load(f)
 
-# Extract unique dates from attendance data
-unique_dates = sorted(set(value.split()[0] for value in attendance_data.values()))
+    # Get current date
+    current_date = datetime.now().strftime('%d-%m-%Y')
 
-# print(unique_dates)
+    # Check if the Excel file exists
+    try:
+        attendance_df = pd.read_excel('Attendance.xlsx')
+    except FileNotFoundError:
+        # Create an empty DataFrame if the file doesn't exist
+        attendance_data = {'Students': list(registered_faces.values())}
+        attendance_df = pd.DataFrame(attendance_data)
 
-# Load or create Excel workbook
-try:
-    workbook = openpyxl.load_workbook('attendance.xlsx')
-except FileNotFoundError:
-    workbook = Workbook()
+    # Add a new column for the current date if it doesn't exist
+    if current_date not in attendance_df.columns:
+        attendance_df[current_date] = 'Absent'
 
-# Select active worksheet
-worksheet = workbook.active
+    # Update attendance for recognized faces
+    for face in Recognized_faces:
+        for user_id, user_name in registered_faces.items():
+            if face == user_name:
+                attendance_df.loc[attendance_df['Students'] == user_name,
+                                  current_date] = datetime.now().strftime('%H:%M:%S')
+                break
 
-# Add a new column with today's date
-for date in unique_dates:
-    new_column_letter = get_column_letter(worksheet.max_column + 1)
-    new_column_name = date
-    worksheet[new_column_letter + '1'] = new_column_name
-
-# Iterate through all users
-for user_id, status in users_data.items():
-    # Initialize a row with user_id
-    row = [user_id]
-    # Fill attendance data for each date
-    for date in unique_dates:
-        attendance_datetime = attendance_data.get(user_id)
-        if attendance_datetime is not None:
-            # Extract date part and compare
-            if attendance_datetime.split()[0] == date:
-                # Extract time and append to row
-                row.append(attendance_datetime.split()[1])
-                continue
-        # If user not present on this date, mark as absent
-        row.append("absent")
-    # Append the row to the worksheet
-    worksheet.append(row)
-
-# Save the workbook
-workbook.save('attendance.xlsx')
+    # Save to Excel file
+    attendance_df.to_excel('Attendance.xlsx', index=False)
