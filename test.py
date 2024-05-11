@@ -1,7 +1,7 @@
 import cv2
 
 
-def capture_images():
+def capture_images(compareFaces, embeddings):
     print('press h for key help')
 
     # Open the camera
@@ -11,38 +11,28 @@ def capture_images():
         return
 
     while True:
-        # Wait for user input
-        key = cv2.waitKey(100)
-
-        # Press 't' to capture image
-        if key == ord('t'):
-            # Capture frame
-            ret, frame = cap.read()
-            if not ret:
-                print("Error: Unable to capture frame.")
-                break
-
-            # Display the captured image
-            cv2.imshow('Captured Image', frame)
-
-        # Press 'c' to continue capturing next image
-        elif key == ord('c'):
-            continue
-
-        # Press 'q' to quit
-        elif key == ord('q'):
+        ret, frame = cap.read()
+        if not ret:
+            print("Error: Unable to capture frame")
+            break
+        
+        cv2.imshow("Test Image",frame)
+        key = cv2.waitKey(1)
+        if key == ord('q'):
             break
 
-        # Press any other key to display the help message
-        elif key == ord('h'):
-            print("Press 't' to capture image.")
-            print("Press 'c' to capture next image.")
-            print("Press 'q' to quit.")
+        elif key == ord('t'):
+            cv2.waitKey(0)
+            if key == ord('c'):
+                continue
 
-    # Release the camera and close all OpenCV windows
+            elif key == ord('r'):
+                Recognized_faces, Recognized_Image = compareFaces(frame, embeddings)
+                cv2.imshow(Recognized_Image)
+                cap.release()
+                return Recognized_faces
+
+    # # Release the camera and close all OpenCV windows
     cap.release()
     cv2.destroyAllWindows()
-
-
-# Call the function to capture images
-capture_images()
+    return None

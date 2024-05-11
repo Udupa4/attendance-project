@@ -28,8 +28,8 @@ def compareFaces(Image, embeddings):
                         cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
 
     Image = cv2.resize(Image, (1600, 720))
-    cv2.imshow("Recognized_Image", Image)
-    cv2.waitKey(0)
+    # cv2.imshow("Recognized_Image", Image)
+    # cv2.waitKey(0)
 
     # Return the list of recognized users and the Image with rectangles draw
     return recognized_users, Image
